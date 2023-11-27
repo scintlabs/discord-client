@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "Scint Discord"
+version = "0.1.0"
+description = "Structured, composable intelligence"
+authors = ["Tim Kaechle <timothy.kaechle@me.com>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.11,<3.13"
+discord = "^2.3.2"
+scint = {path = "../scint/dist/scint-0.3.6.tar.gz"}
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
