@@ -5,11 +5,44 @@ import aiohttp
 from discord import Client, Intents
 
 from scint.core.config import API_CHAT_ENDPOINT, DISCORD_SCINT_TOKEN
-from scint.core.util import split_discord_message
 from scint.services.logger import log
 
 intents = Intents.default()
 intents.message_content = True
+
+
+def split_discord_message(message, max_length=2000):
+    if len(message) <= max_length:
+        return [message]
+
+    lines = message.split("\n")
+    chunks = []
+    current_chunk = ""
+
+    for line in lines:
+        if len(line) > max_length:
+            words = line.split(" ")
+            for word in words:
+                if len(word) > max_length:
+                    if current_chunk:
+                        chunks.append(current_chunk)
+                        current_chunk = ""
+                    chunks.append(word)
+                elif len(current_chunk) + len(word) > max_length:
+                    chunks.append(current_chunk)
+                    current_chunk = word
+                else:
+                    current_chunk = f"{current_chunk} {word}" if current_chunk else word
+        elif len(current_chunk) + len(line) > max_length:
+            chunks.append(current_chunk)
+            current_chunk = line
+        else:
+            current_chunk = f"{current_chunk}\n{line}" if current_chunk else line
+
+    if current_chunk:
+        chunks.append(current_chunk)
+
+    return chunks
 
 
 async def chat_request(content, author):
