@@ -1,14 +1,24 @@
 import json
 import re
+import os
+from typing import Optional
 
+import dotenv
 import aiohttp
 from discord import Client, Intents
 
-from scint.core.config import API_CHAT_ENDPOINT, DISCORD_SCINT_TOKEN
-from scint.services.logger import log
 
 intents = Intents.default()
 intents.message_content = True
+
+
+def envar(var: str) -> Optional[str]:
+    dotenv.load_dotenv()
+    return os.environ.get(var)
+
+
+API_ENDPOINT = envar("API_ENDPOINT")
+DISCORD_TOKEN = envar("DISCORD_TOKEN")
 
 
 def split_discord_message(message, max_length=2000):
@@ -49,9 +59,8 @@ async def chat_request(content, author):
     request = {"message": {"role": "user", "content": f"{author}: {content}"}}
 
     async with aiohttp.ClientSession() as session:
-        async with session.post(API_CHAT_ENDPOINT, json=request) as res:
+        async with session.post(API_ENDPOINT, json=request) as res:
             if res.status != 200:
-                log.info(await res.text())
                 return
 
             while True:
@@ -64,9 +73,6 @@ async def chat_request(content, author):
 
                 if response:
                     yield response.get("content")
-
-                else:
-                    log.error("Response does not contain a content key.")
 
 
 class ScintDiscordClient(Client):
@@ -91,7 +97,7 @@ class ScintDiscordClient(Client):
                             await message.channel.send(chunk)
 
                 except Exception as e:
-                    log.exception(f"Error: {e}")
+                    # log.exception(f"Error: {e}")
                     await message.channel.send(
                         f"An error occurred while processing your request: {e}"
                     )
@@ -99,4 +105,4 @@ class ScintDiscordClient(Client):
 
 
 scint_discord = ScintDiscordClient(intents=intents)
-scint_discord.run(DISCORD_SCINT_TOKEN)
+scint_discord.run(DISCORD_TOKEN)
